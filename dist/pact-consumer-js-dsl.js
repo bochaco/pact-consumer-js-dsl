@@ -97,7 +97,7 @@ Pact.Http = Pact.Http || {};
 (function() {
 	var XMLHttpRequest = typeof exports === 'object'? require('xhr2') : window.XMLHttpRequest;
 
-    this.makeRequest = function(method, url, body, callback) {
+    this.makeRequest = function(method, url, pactDetails, body, callback) {
       var xhr = new XMLHttpRequest();
       xhr.onload = function(event) {
           callback(null, event.target);
@@ -107,6 +107,12 @@ Pact.Http = Pact.Http || {};
       };
       xhr.open(method, url, true);
       xhr.setRequestHeader('X-Pact-Mock-Service', 'true');
+      if (pactDetails && pactDetails.consumer) {
+         xhr.setRequestHeader('X-Pact-Consumer', pactDetails.consumer.name);
+      }
+      if (pactDetails && pactDetails.provider) {
+         xhr.setRequestHeader('X-Pact-Provider', pactDetails.provider.name);
+      }
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.send(body);
   };
@@ -130,24 +136,24 @@ Pact.MockServiceRequests = Pact.MockServiceRequests || {};
     };
   };
 
-  this.getVerification = function(baseUrl, callback) {
-    Pact.Http.makeRequest('GET', baseUrl + '/interactions/verification', null, createResponseHandler('Pact verification failed', callback));
+  this.getVerification = function(pactDetails, baseUrl, callback) {
+    Pact.Http.makeRequest('GET', baseUrl + '/interactions/verification', pactDetails, null, createResponseHandler('Pact verification failed', callback));
   };
 
-  this.putInteractions = function(interactions, baseUrl, callback) {
-    Pact.Http.makeRequest('PUT', baseUrl + '/interactions', JSON.stringify({interactions: interactions}), createResponseHandler('Pact interaction setup failed', callback));
+  this.putInteractions = function(pactDetails, interactions, baseUrl, callback) {
+    Pact.Http.makeRequest('PUT', baseUrl + '/interactions', pactDetails, JSON.stringify({interactions: interactions}), createResponseHandler('Pact interaction setup failed', callback));
   };
 
-  this.deleteInteractions = function(baseUrl, callback) {
-    Pact.Http.makeRequest('DELETE', baseUrl + '/interactions', null, createResponseHandler('Pact interaction cleanup failed', callback));
+  this.deleteInteractions = function(pactDetails, baseUrl, callback) {
+    Pact.Http.makeRequest('DELETE', baseUrl + '/interactions', pactDetails, null, createResponseHandler('Pact interaction cleanup failed', callback));
   };
 
-  this.postInteraction = function(interaction, baseUrl, callback) {
-    Pact.Http.makeRequest('POST', baseUrl + '/interactions', JSON.stringify(interaction), createResponseHandler('Pact interaction setup failed', callback));
+  this.postInteraction = function(pactDetails, interaction, baseUrl, callback) {
+    Pact.Http.makeRequest('POST', baseUrl + '/interactions', pactDetails, JSON.stringify(interaction), createResponseHandler('Pact interaction setup failed', callback));
   };
 
   this.postPact = function(pactDetails, baseUrl, callback) {
-    Pact.Http.makeRequest('POST', baseUrl + '/pact', JSON.stringify(pactDetails), createResponseHandler('Could not write the pact file', callback));
+    Pact.Http.makeRequest('POST', baseUrl + '/pact', pactDetails, JSON.stringify(pactDetails), createResponseHandler('Could not write the pact file', callback));
   };
 
 }).apply(Pact.MockServiceRequests);
@@ -180,7 +186,7 @@ Pact.MockService = Pact.MockService || {};
       // PUT the new interactions
       var interactions = _interactions;
       _interactions = []; //Clean the local setup
-      Pact.MockServiceRequests.putInteractions(interactions, _baseURL, callback);
+      Pact.MockServiceRequests.putInteractions(_pactDetails, interactions, _baseURL, callback);
     };
 
     this.verifyAndWrite = function(callback) {
@@ -199,7 +205,7 @@ Pact.MockService = Pact.MockService || {};
     this.verify = function(callback) {
         callback = callback || function(){};
         //Verify that the expected interactions have occurred
-        Pact.MockServiceRequests.getVerification(_baseURL, callback);
+        Pact.MockServiceRequests.getVerification(_pactDetails, _baseURL, callback);
     };
 
     this.write = function(callback) {

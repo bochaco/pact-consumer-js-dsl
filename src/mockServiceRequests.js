@@ -15,24 +15,24 @@ Pact.MockServiceRequests = Pact.MockServiceRequests || {};
     };
   };
 
-  this.getVerification = function(baseUrl, callback) {
-    Pact.Http.makeRequest('GET', baseUrl + '/interactions/verification', null, createResponseHandler('Pact verification failed', callback));
+  this.getVerification = function(pactDetails, baseUrl, callback) {
+    Pact.Http.makeRequest('GET', baseUrl + '/interactions/verification', pactDetails, null, createResponseHandler('Pact verification failed', callback));
   };
 
-  this.putInteractions = function(interactions, baseUrl, callback) {
-    Pact.Http.makeRequest('PUT', baseUrl + '/interactions', JSON.stringify({interactions: interactions}), createResponseHandler('Pact interaction setup failed', callback));
+  this.putInteractions = function(pactDetails, interactions, baseUrl, callback) {
+    Pact.Http.makeRequest('PUT', baseUrl + '/interactions', pactDetails, JSON.stringify({interactions: interactions}), createResponseHandler('Pact interaction setup failed', callback));
   };
 
-  this.deleteInteractions = function(baseUrl, callback) {
-    Pact.Http.makeRequest('DELETE', baseUrl + '/interactions', null, createResponseHandler('Pact interaction cleanup failed', callback));
+  this.deleteInteractions = function(pactDetails, baseUrl, callback) {
+    Pact.Http.makeRequest('DELETE', baseUrl + '/interactions', pactDetails, null, createResponseHandler('Pact interaction cleanup failed', callback));
   };
 
-  this.postInteraction = function(interaction, baseUrl, callback) {
-    Pact.Http.makeRequest('POST', baseUrl + '/interactions', JSON.stringify(interaction), createResponseHandler('Pact interaction setup failed', callback));
+  this.postInteraction = function(pactDetails, interaction, baseUrl, callback) {
+    Pact.Http.makeRequest('POST', baseUrl + '/interactions', pactDetails, JSON.stringify(interaction), createResponseHandler('Pact interaction setup failed', callback));
   };
 
   this.postPact = function(pactDetails, baseUrl, callback) {
-    Pact.Http.makeRequest('POST', baseUrl + '/pact', JSON.stringify(pactDetails), createResponseHandler('Could not write the pact file', callback));
+    Pact.Http.makeRequest('POST', baseUrl + '/pact', pactDetails, JSON.stringify(pactDetails), createResponseHandler('Could not write the pact file', callback));
   };
 
 }).apply(Pact.MockServiceRequests);

@@ -27,7 +27,7 @@ Pact.MockService = Pact.MockService || {};
       // PUT the new interactions
       var interactions = _interactions;
       _interactions = []; //Clean the local setup
-      Pact.MockServiceRequests.putInteractions(interactions, _baseURL, callback);
+      Pact.MockServiceRequests.putInteractions(_pactDetails, interactions, _baseURL, callback);
     };
 
     this.verifyAndWrite = function(callback) {
@@ -46,7 +46,7 @@ Pact.MockService = Pact.MockService || {};
     this.verify = function(callback) {
         callback = callback || function(){};
         //Verify that the expected interactions have occurred
-        Pact.MockServiceRequests.getVerification(_baseURL, callback);
+        Pact.MockServiceRequests.getVerification(_pactDetails, _baseURL, callback);
     };
 
     this.write = function(callback) {
