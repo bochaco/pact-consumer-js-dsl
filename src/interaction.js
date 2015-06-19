@@ -41,16 +41,18 @@ Pact.Interaction = Pact.Interaction || {};
         return this;
       },
 
-      willRespondWith: function(firstParameter, headers, body) {
+      willRespondWith: function(firstParameter, headers, body, matchingRules) {
 
         if (typeof(firstParameter) === 'object') {
           this.response.status = firstParameter.status;
           this.response.headers = firstParameter.headers;
           this.response.body = firstParameter.body;
+          this.response.responseMatchingRules = firstParameter.matchingRules;
         } else {
           this.response.status = firstParameter;
           this.response.headers = headers;
           this.response.body = body;
+          this.response.responseMatchingRules = matchingRules;
         }
 
         if (!this.response.status) {
