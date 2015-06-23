@@ -183,13 +183,29 @@ Pact.MockService = Pact.MockService || {};
       }
     };
 
-    this.cleanAndSetup = function(callback) {
+    var setupInteractionsSequentially = function(_pactDetails, interactions, index, callback) {
+      if (index >= interactions.length) {
+        callback(null);
+        return;
+      }
+
+      Pact.MockServiceRequests.postInteraction(_pactDetails, interactions[index], _baseURL, function(error) {
+        if (error) {
+          callback(error);
+          return;
+        }
+
+        setupInteractionsSequentially(_pactDetails, interactions, index + 1, callback);
+      });
+    };
+
+    this.cleanAndSetup = function(callback, usePost) {
       this.clean(function(error){
         if (error) {
           callback(error);
           return;
         }
-        self.setup(callback);
+        self.setup(callback, usePost);
       });
     };
 
@@ -200,11 +216,15 @@ Pact.MockService = Pact.MockService || {};
     };
 
     //private
-    this.setup = function(callback) {
+    this.setup = function(callback, usePost) {
       // PUT the new interactions
       var interactions = _interactions;
       _interactions = []; //Clean the local setup
-      Pact.MockServiceRequests.putInteractions(_pactDetails, interactions, _baseURL, callback);
+      if (usePost) {
+        setupInteractionsSequentially(_pactDetails, interactions, 0, callback);
+      } else {
+        Pact.MockServiceRequests.putInteractions(_pactDetails, interactions, _baseURL, callback);
+      }
     };
 
     this.verifyAndWrite = function(callback) {
@@ -243,7 +263,7 @@ Pact.MockService = Pact.MockService || {};
       return interaction;
     };
 
-    this.run = function(completeFunction, testFunction, useCleanAndSetup) {
+    this.run = function(completeFunction, testFunction, useCleanAndSetup, usePost) {
       var setupFn;
       if (useCleanAndSetup) {
         setupFn = this.cleanAndSetup.bind(this);
@@ -271,7 +291,7 @@ Pact.MockService = Pact.MockService || {};
         testFunction(function() {
           that.verifyAndWrite(done);
         });
-      });
+      }, usePost);
     };
   }
 
