@@ -183,6 +183,22 @@ Pact.MockService = Pact.MockService || {};
       }
     };
 
+    this.cleanAndSetup = function(callback) {
+      this.clean(function(error){
+        if (error) {
+          callback(error);
+          return;
+        }
+        self.setup(callback);
+      });
+    };
+
+    //private
+    this.clean = function(callback) {
+      // Cleanup the interactions from the previous test
+      Pact.MockServiceRequests.deleteInteractions(_pactDetails, _baseURL, callback);
+    };
+
     //private
     this.setup = function(callback) {
       // PUT the new interactions
@@ -227,7 +243,13 @@ Pact.MockService = Pact.MockService || {};
       return interaction;
     };
 
-    this.run = function(completeFunction, testFunction) {
+    this.run = function(completeFunction, testFunction, useCleanAndSetup) {
+      var setupFn;
+      if (useCleanAndSetup) {
+        setupFn = this.cleanAndSetup.bind(this);
+      } else {
+        setupFn = this.setup.bind(this);
+      }
 
       if (typeof(completeFunction) !== 'function' || typeof(testFunction) !== 'function') {
         throw new Error('Error calling run function. \'completeFunction\' and \'testFunction\' are mandatory.');
@@ -239,7 +261,7 @@ Pact.MockService = Pact.MockService || {};
       };
 
       var that = this;
-      this.setup(function(error) {
+      setupFn(function(error) {
         if (error) {
           done(error);
           return;
