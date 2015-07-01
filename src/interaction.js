@@ -4,7 +4,6 @@ Pact.Interaction = Pact.Interaction || {};
 
   this.create = function() {
     return {
-      providerState: null,
       description: '',
       request: {},
       response: {},
