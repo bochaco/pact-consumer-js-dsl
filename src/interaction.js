@@ -18,7 +18,7 @@ Pact.Interaction = Pact.Interaction || {};
         return this;
       },
 
-      withRequest: function(firstParameter, path, headers, body) {
+      withRequest: function(firstParameter, path, headers, body, matchingRules) {
 
         if (typeof(firstParameter) === 'object') {
           this.request.method = firstParameter.method.toLowerCase();
@@ -26,11 +26,13 @@ Pact.Interaction = Pact.Interaction || {};
           this.request.query = firstParameter.query;
           this.request.headers = firstParameter.headers;
           this.request.body = firstParameter.body;
+          this.request.requestMatchingRules = firstParameter.matchingRules;
         } else {
           this.request.method = firstParameter.toLowerCase();
           this.request.path = path;
           this.request.headers = headers;
           this.request.body = body;
+          this.request.requestMatchingRules = matchingRules;
         }
 
         if (!this.request.method || !this.request.path) {
