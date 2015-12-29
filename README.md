@@ -1,6 +1,10 @@
 # Pact Consumer Javascript DSL
 
-This codebase provides a Javascript DSL for creating pacts. If you are new to Pact, please read the Pact [README](pact-readme) first.
+[![Build Status](https://travis-ci.org/DiUS/pact-consumer-js-dsl.svg)](https://travis-ci.org/DiUS/pact-consumer-js-dsl)
+
+This codebase provides a Javascript DSL for creating pacts. If you are new to Pact, please read the Pact [README][pact-readme] first.
+
+The Javascript DSL is compatible with v2 of the [pact-specification](https://github.com/bethesque/pact-specification/tree/version-2) and supports type based matching, flexible array lengths, and regular expressions (read more below).
 
 This DSL relies on the Ruby [pact-mock_service][pact-mock-service] gem to provide the mock service for the Javascript tests. If you do not want to use Ruby in your project, please read about using a standalone Pact mock service [here][pact-mock-service-without-ruby].
 
@@ -22,7 +26,7 @@ This DSL relies on the Ruby [pact-mock_service][pact-mock-service] gem to provid
 
 ```ruby
 source 'https://rubygems.org'
-gem 'pact-mock_service', '~> 0.4.1'
+gem 'pact-mock_service', '~> 0.7.0'
 
 ```
 
@@ -112,8 +116,8 @@ gem 'pact-mock_service', '~> 0.4.1'
     });
     ```
 
-    The "done" callback is used by the pact framework to communicate to your test framework that the expected interactions have not occurred. It should contain an assertion that will fail the test if an error is present. eg. for Jasmine: 
-    
+    The "done" callback is used by the pact framework to communicate to your test framework that the expected interactions have not occurred. It should contain an assertion that will fail the test if an error is present. eg. for Jasmine:
+
     ```javascript
     done: function (error) {
       expect(error).toBe(null);
@@ -127,9 +131,116 @@ gem 'pact-mock_service', '~> 0.4.1'
 
 1. Let's run that bad boy!
 
-   * Start the pact mock server with `bundle exec pact-mock-service -p 1234 -l log/pact.logs --pact-dir tmp/pacts`
+   * Start the pact mock server with `bundle exec pact-mock-service -p 1234 --pact-specification-version 2.0.0 -l log/pact.logs --pact-dir tmp/pacts`
    * Run `karma start` (in another terminal window)
    * Inspect the pact file that has been written to "hello_consumer-hello_provider.json"
+
+### Flexible Matching
+
+Please read about using regular expressions and type based matching [here][flexible-matching] before continuing.
+
+#### Match by regular expression
+
+Remember that the mock service is written in Ruby, so the regular expression must be in a Ruby format, not a Javascript format. Make sure to start the mock service with the argument `--pact-specification-version 2.0.0`.
+
+```javascript
+
+provider
+  .given('there is a product')
+  .uponReceiving("request for products")
+  .withRequest({
+    method: "get",
+    path: "/products",
+    query: {
+      category: Pact.Match.term({matcher: "\\w+", generate: 'pizza'}),
+    }
+  })
+  .willRespondWith(
+    200,
+    {},
+    {
+      "collection": [
+        {
+          guid: Pact.Match.term({matcher: "\\d{16}", generate: "1111222233334444"})
+        }
+      ]
+    }
+  );
+```
+
+#### Match based on type
+
+```javascript
+
+provider
+  .given('there is a product')
+  .uponReceiving("request for products")
+  .withRequest({
+    method: "get",
+    path: "/products",
+    query: {
+      category: Pact.Match.somethingLike("pizza")
+    }
+  })
+  .willRespondWith(
+    200,
+    {},
+    {
+      "collection": [
+        {
+          guid: Pact.Match.somethingLike(1111222233334444)
+        }
+      ]
+    }
+  );
+```
+
+[flexible-matching]: https://github.com/realestate-com-au/pact/wiki/Regular-expressions-and-type-matching-with-Pact
+
+#### Match based on arrays
+
+Matching provides the ability to specify flexible length arrays. For example:
+
+```javascript
+Pact.Match.eachLike(obj, { min: 3 })
+```
+
+Where `obj` can be any javascript object, value or Pact.Match. It takes optional argument (`{ min: 3 }`) where min is greater than 0 and defaults to 1 if not provided. 
+
+Below is an example that uses all of the Pact Matchers.
+
+```javascript
+
+var somethingLike = Pact.Match.somethingLike;
+var term = Pact.Match.term;
+var eachLike = Pact.Match.eachLike;
+
+provider
+  .given('there is a product')
+  .uponReceiving("request for products")
+  .withRequest({
+    method: "get",
+    path: "/products",
+    query: {
+      category: "clothing"
+    }
+  })
+  .willRespondWith({
+    status: 200,
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: {
+        "items":eachLike({
+            size: somethingLike(10),
+            colour: term("red|green|blue", {generates: "blue"}),
+            tag: eachLike(somethingLike("jumper"))
+        }, {min: 2})
+    }
+  });
+```
+
+### Examples
 
 #### Web Example
 

@@ -3,11 +3,17 @@ Pact.MockService = Pact.MockService || {};
 (function() {
 
   function MockService(opts) {
-    var _baseURL = 'http://127.0.0.1:' + opts.port;
+
+    if (!opts || typeof opts.port === 'undefined' ) {
+      throw new Error('Error creating MockService. Please provide the Pact mock service port');
+    }
+
+    var _host = opts.host || '127.0.0.1';
+    var _baseURL = 'http://' + _host + ':' + opts.port;
     var _interactions = [];
     var self = this;
 
-    if (typeof(opts.done) !== 'function') {
+    if (typeof opts.done !== 'function') {
       throw new Error('Error creating MockService. Please provide an option called "done", that is a function that asserts (using your test framework of choice) that the first argument, error, is null.');
     }
 

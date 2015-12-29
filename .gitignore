@@ -17,3 +17,6 @@ log/
 example-*/log
 example-*/tmp
 checkstyle.xml
+
+.idea
+.DS_Store
